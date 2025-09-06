@@ -1,0 +1,38 @@
+name: Build RAG index
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'data/checklist.txt'
+      - 'scripts/build-index.ts'
+
+permissions:
+  contents: write
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Build embeddings
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npm run build-index
+      - name: Commit index.json if changed
+        run: |
+          if git diff --quiet --exit-code data/index.json; then
+            echo "No changes to index.json"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/index.json
+            git commit -m "Update RAG index"
+            git push
+          fi
