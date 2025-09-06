@@ -5,7 +5,7 @@ import { createOpenAI } from '@ai-sdk/openai'
 import { loadIndex, retrieve } from '@/lib/rag'
 import { systemPrompt } from '@/lib/prompt'
 
-export const runtime = 'edge'
+export const runtime = 'nodejs'
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
