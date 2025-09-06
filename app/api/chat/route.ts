@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     // Stream a response in the format useChat expects
     const result = await streamText({
-      model: openai.chat(process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini') as any),
+      model: openai.chat(process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini') as any,
       temperature: 0.3,
       system: systemPrompt(),
       messages: [
