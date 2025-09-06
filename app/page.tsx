@@ -30,9 +30,11 @@ export default function Page() {
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_16rem] gap-6">
       <section className="bg-white border rounded-2xl p-4 lg:p-6 shadow-sm">
         <div ref={listRef} className="h-[55vh] lg:h-[62vh] overflow-y-auto pr-1">
-          {messages.map(m => (
-            <Message key={m.id} role={m.role} content={m.content} />
-          ))}
+          {messages
+            .filter(m => m.role === 'user' || m.role === 'assistant')
+            .map(m => (
+              <Message key={m.id} role={m.role as 'user' | 'assistant'} content={m.content} />
+            ))}
           {isLoading && (
             <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
               <Loader2 className="size-4 animate-spin" /> Thinking...
@@ -82,15 +84,16 @@ export default function Page() {
   )
 }
 
-function Message({ role, content }: { role: 'assistant' | 'user' | 'system'; content: string }) {
-  if (role === 'system') return null
+function Message({ role, content }: { role: 'assistant' | 'user'; content: string }) {
   const isUser = role === 'user'
   return (
     <div className={classNames('mb-4', isUser ? 'text-right' : 'text-left')}>
-      <div className={classNames(
-        'inline-block whitespace-pre-wrap px-4 py-3 rounded-2xl text-sm',
-        isUser ? 'bg-brand text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'
-      )}>
+      <div
+        className={classNames(
+          'inline-block whitespace-pre-wrap px-4 py-3 rounded-2xl text-sm',
+          isUser ? 'bg-brand text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+        )}
+      >
         {content}
       </div>
     </div>
@@ -100,7 +103,7 @@ function Message({ role, content }: { role: 'assistant' | 'user' | 'system'; con
 function ExportBlock({ messages }: { messages: any[] }) {
   function exportMarkdown() {
     const md = messages
-      .filter(m => m.role !== 'system')
+      .filter(m => m.role === 'user' || m.role === 'assistant')
       .map(m => `${m.role === 'user' ? '### You' : '### Coach'}\n\n${m.content}`)
       .join('\n\n---\n\n')
     const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
