@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     const sys = systemPrompt()
 
     const completion = await client.chat.completions.create({
-      model: process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini',
+      model: process.env.OPENAI_CHAT_MODEL || 'gpt-5',
       temperature: 0.3,
       messages: [
         { role: 'system', content: sys },
