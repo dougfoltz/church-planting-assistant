@@ -1,5 +1,5 @@
-import path from 'path'
-import fs from 'fs/promises'
+// lib/rag.ts
+import indexData from '@/data/index.json'
 
 export type Chunk = { id: string; text: string; embedding: number[] }
 export type Index = { chunks: Chunk[] }
@@ -8,10 +8,8 @@ let cachedIndex: Index | null = null
 
 export async function loadIndex(): Promise<Index> {
   if (cachedIndex) return cachedIndex
-  const file = path.join(process.cwd(), 'data', 'index.json')
-  const raw = await fs.readFile(file, 'utf-8')
-  cachedIndex = JSON.parse(raw)
-  return cachedIndex!
+  cachedIndex = indexData as Index
+  return cachedIndex
 }
 
 export function cosineSimilarity(a: number[], b: number[]) {
@@ -27,7 +25,7 @@ export function cosineSimilarity(a: number[], b: number[]) {
 export function retrieve(index: Index, query: number[], k = 6) {
   const scored = index.chunks.map(ch => ({
     ...ch,
-    score: cosineSimilarity(query, ch.embedding)
+    score: cosineSimilarity(query, ch.embedding),
   }))
   scored.sort((x, y) => y.score - x.score)
   return scored.slice(0, k)
