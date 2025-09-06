@@ -1,6 +1,6 @@
 // app/api/chat/route.ts
 import { NextRequest } from 'next/server'
-import { streamText, embedMany } from 'ai'
+import { streamText, embed } from 'ai'
 import { createOpenAI } from '@ai-sdk/openai'
 import { loadIndex, retrieve } from '@/lib/rag'
 import { systemPrompt } from '@/lib/prompt'
@@ -27,26 +27,25 @@ export async function POST(req: NextRequest) {
     const userText: string = userMsg?.content ?? ''
     if (!userText) return fail(400, 'No user message content')
 
-    // Load the local index
+    // Load local index
     const index = await loadIndex()
     if (!index?.chunks?.length) {
       return fail(500, 'RAG index is empty or missing. Did you commit data/index.json after running npm run build-index?')
     }
 
-    // Create embedding for the query (embeddings[] is number[] vectors)
-    const { embeddings } = await embedMany({
+    // Create one embedding vector for the query (embed() returns { embedding })
+    const { embedding: queryVec } = await embed({
       model: openai.embedding('text-embedding-3-small'),
-      values: [userText],
+      value: userText,
     })
-    const queryVec = embeddings?.[0] as number[] | undefined
-    if (!queryVec) return fail(500, 'Embedding creation failed')
+    if (!queryVec?.length) return fail(500, 'Embedding creation failed')
 
     // Retrieve top-K chunks
     const topK = Number(process.env.RAG_TOP_K ?? 6)
-    const hits = retrieve(index, queryVec, topK)
+    const hits = retrieve(index, queryVec as number[], topK)
     const context = hits.map(h => h.text).join('\n\n---\n\n')
 
-    // Stream the chat response
+    // Stream a response in the format useChat expects
     const result = await streamText({
       model: openai.chat(process.env.OPENAI_CHAT_MODEL || 'gpt-5'),
       temperature: 0.3,
